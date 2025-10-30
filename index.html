@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revision Test App</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for better aesthetics */
+        :root {
+            --primary-color: #10B981; /* Emerald 500 */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Start from the top, allowing scrolling */
+            padding-top: 4rem;
+            padding-bottom: 4rem;
+        }
+        .card {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+        .course-button {
+            padding: 1rem 1.5rem;
+            background-color: #ecfdf5;
+            border: 2px solid var(--primary-color);
+            color: #065F46;
+            font-weight: 600;
+            text-align: center;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .course-button:hover {
+            background-color: #D1FAE5;
+            transform: translateY(-2px);
+        }
+        .submit-button {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 700;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+        }
+        .submit-button:hover {
+            background-color: #059669; /* Emerald 600 */
+        }
+        .radio-label {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.1s;
+        }
+        .radio-label:hover {
+            background-color: #f9fafb;
+        }
+        input[type="radio"]:checked + span {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+
+<div id="app" class="app-container">
+    <!-- Content will be rendered here by JavaScript -->
+    <div id="loading" class="text-gray-600 text-lg">Loading App...</div>
+</div>
+
+<script type="module">
+    // --- Firebase/Canvas Boilerplate (Not used for quiz, but required for the environment) ---
+    // The quiz data is kept local, so no Firestore connection is strictly necessary, 
+    // but the environment mandates these imports and initialization structure.
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    let app;
+    let db;
+    let auth;
+    let userId;
+
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+    window.onload = async function() {
+        try {
+            if (Object.keys(firebaseConfig).length > 0) {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                setLogLevel('Debug'); // Enable Firestore logging
+
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                userId = auth.currentUser?.uid || crypto.randomUUID();
+            } else {
+                console.warn("Firebase configuration not found. Running in local-only mode.");
+                userId = crypto.randomUUID();
+            }
+        } catch (error) {
+            console.error("Firebase initialization failed, running in local-only mode:", error);
+        } finally {
+            // Start the application logic
+            renderLandingPage();
+        }
+    }
+    // ----------------------------------------------------------------------------------------
+
+    const QUIZ_DATA = {
+        "neet": {
+            title: "NEET - Medical Entrance Exam",
+            questions: [
+                { q: "Which of the following is responsible for initiating the heart beat?", a: ["SA Node", "AV Node", "Bundle of His", "Purkinje fibers"], c: 0 },
+                { q: "The functional unit of kidney is:", a: ["Ureter", "Nephron", "Medulla", "Pelvis"], c: 1 },
+                { q: "Which element is essential for the structure of chlorophyll?", a: ["Iron", "Calcium", "Magnesium", "Potassium"], c: 2 },
+                { q: "Which vitamin deficiency causes night blindness?", a: ["Vitamin B", "Vitamin C", "Vitamin D", "Vitamin A"], c: 3 },
+                { q: "What is the pH value of human blood?", a: ["6.4", "7.4", "8.2", "7.8"], c: 1 },
+                { q: "What type of cell division produces gametes?", a: ["Mitosis", "Meiosis", "Binary Fission", "Budding"], c: 1 },
+                { q: "The powerhouse of the cell is:", a: ["Nucleus", "Ribosome", "Mitochondria", "Endoplasmic Reticulum"], c: 2 },
+                { q: "Largest endocrine gland in the human body is:", a: ["Pituitary", "Thyroid", "Adrenal", "Pancreas"], c: 1 },
+                { q: "Photosynthesis occurs in:", a: ["Mitochondria", "Nucleus", "Chloroplasts", "Cytoplasm"], c: 2 },
+                { q: "The term 'Gene' was coined by:", a: ["Gregor Mendel", "Hugo de Vries", "T. H. Morgan", "W. L. Johannsen"], c: 3 },
+            ]
+        },
+        "rrb ntpc": {
+            title: "RRB NTPC - Non-Technical Popular Categories",
+            questions: [
+                { q: "What is the capital of Austria?", a: ["Berlin", "Vienna", "Brussels", "Rome"], c: 1 },
+                { q: "The longest river in India is:", a: ["Yamuna", "Godavari", "Ganga", "Brahmaputra"], c: 2 },
+                { q: "Who invented the light bulb?", a: ["Nikola Tesla", "Isaac Newton", "Thomas Edison", "Albert Einstein"], c: 2 },
+                { q: "What is the currency of Japan?", a: ["Yuan", "Won", "Yen", "Dollar"], c: 2 },
+                { q: "Which planet is known as the 'Red Planet'?", a: ["Venus", "Jupiter", "Mars", "Saturn"], c: 2 },
+                { q: "Which state is known as the 'Spice Garden of India'?", a: ["Karnataka", "Kerala", "Andhra Pradesh", "Tamil Nadu"], c: 1 },
+                { q: "The term 'Googly' is associated with which sport?", a: ["Football", "Hockey", "Cricket", "Tennis"], c: 2 },
+                { q: "The first Indian woman to climb Mount Everest is:", a: ["Arunima Sinha", "Bachendri Pal", "Santosh Yadav", "Malavath Poorna"], c: 1 },
+                { q: "What is the minimum age to be a member of the Lok Sabha?", a: ["18 years", "21 years", "25 years", "30 years"], c: 2 },
+                { q: "Where are the headquarters of the World Health Organization (WHO)?", a: ["New York", "London", "Geneva", "Paris"], c: 2 },
+            ]
+        },
+        "nclex": {
+            title: "NCLEX - National Council Licensure Examination (Nursing)",
+            questions: [
+                { q: "A patient is hypotensive, tachycardic, and has cool, clammy skin. Which type of shock is this indicative of?", a: ["Cardiogenic", "Hypovolemic", "Septic", "Neurogenic"], c: 1 },
+                { q: "The primary purpose of deep breathing and coughing exercises post-operatively is to:", a: ["Prevent deep vein thrombosis (DVT)", "Prevent atelectasis and pneumonia", "Reduce pain perception", "Increase gastrointestinal motility"], c: 1 },
+                { q: "Which electrolyte imbalance is associated with the 'Trousseau sign' and 'Chvostek sign'?", a: ["Hyperkalemia", "Hypocalcemia", "Hypernatremia", "Hypomagnesemia"], c: 1 },
+                { q: "What is the most common adverse effect of opioid analgesics?", a: ["Diarrhea", "Hypertension", "Respiratory depression", "Tinnitus"], c: 2 },
+                { q: "The proper position for administering an enema is:", a: ["Supine", "Fowler's", "Sims' left lateral", "Prone"], c: 2 },
+                { q: "A score of 8 on the Apgar scale 5 minutes after birth indicates:", a: ["Severe distress", "Moderate difficulty", "Normal adaptation", "Need for immediate resuscitation"], c: 2 },
+                { q: "Which isolation precaution is required for a patient with Pulmonary Tuberculosis?", a: ["Contact", "Droplet", "Airborne", "Standard"], c: 2 },
+                { q: "What is the normal range for adult respiratory rate (breaths per minute)?", a: ["18-24", "10-14", "12-20", "20-30"], c: 2 },
+                { q: "Before administering a new medication, the first step a nurse should take is to:", a: ["Check the patient's ID band", "Review the medication's side effects", "Assess the patient's vital signs", "Check the expiration date"], c: 0 },
+                { q: "The priority nursing action when a patient begins to have a seizure is to:", a: ["Insert a tongue blade", "Restrain the patient", "Call a doctor immediately", "Ensure patient safety and airway"], c: 3 },
+            ]
+        },
+        "ssc cgl": {
+            title: "SSC CGL - Combined Graduate Level Exam",
+            questions: [
+                { q: "Who was the founder of the Mauryan Empire?", a: ["Ashoka", "Bindusara", "Chandragupta Maurya", "Samudragupta"], c: 2 },
+                { q: "The instrument used to measure the intensity of earthquakes is:", a: ["Barometer", "Hydrometer", "Seismograph", "Ammeter"], c: 2 },
+                { q: "The smallest bone in the human body is:", a: ["Femur", "Tibia", "Stapes", "Ulna"], c: 2 },
+                { q: "What is the full form of GST in the Indian context?", a: ["General Sales Tax", "Goods and Services Tax", "Global Sales Tax", "Government Sales Tax"], c: 1 },
+                { q: "Which acid is present in a lemon?", a: ["Lactic Acid", "Ascorbic Acid", "Citric Acid", "Tartaric Acid"], c: 2 },
+                { q: "The 'Dandi March' was started in which year?", a: ["1928", "1930", "1932", "1935"], c: 1 },
+                { q: "Which metal is the best conductor of electricity?", a: ["Gold", "Copper", "Aluminum", "Silver"], c: 3 },
+                { q: "The headquarters of the Reserve Bank of India (RBI) is located in:", a: ["New Delhi", "Mumbai", "Kolkata", "Chennai"], c: 1 },
+                { q: "Which article of the Indian Constitution deals with the 'Right to Equality'?", a: ["Article 19", "Article 14", "Article 21", "Article 32"], c: 1 },
+                { q: "Which layer of the atmosphere is closest to the Earth's surface?", a: ["Stratosphere", "Mesosphere", "Thermosphere", "Troposphere"], c: 3 },
+            ]
+        },
+        "ssc chsl": {
+            title: "SSC CHSL - Combined Higher Secondary Level Exam",
+            questions: [
+                { q: "What is the study of birds called?", a: ["Entomology", "Ornithology", "Virology", "Ophiology"], c: 1 },
+                { q: "What is the chemical symbol for Gold?", a: ["Ag", "Au", "Fe", "Pb"], c: 1 },
+                { q: "Which country is home to the 'Great Barrier Reef'?", a: ["Canada", "Mexico", "Australia", "Brazil"], c: 2 },
+                { q: "The Battle of Plassey was fought in which year?", a: ["1757", "1764", "1772", "1780"], c: 0 },
+                { q: "Which of the following is a Kharif crop?", a: ["Wheat", "Barley", "Rice", "Gram"], c: 2 },
+                { q: "Who is the author of the book 'Ignited Minds'?", a: ["Jawaharlal Nehru", "APJ Abdul Kalam", "R. K. Narayan", "Vikram Seth"], c: 1 },
+                { q: "The deepest oceanic trench in the world is the:", a: ["Puerto Rico Trench", "Java Trench", "Mariana Trench", "Tonga Trench"], c: 2 },
+                { q: "In which year did India win its first Cricket World Cup?", a: ["1983", "1987", "2003", "2011"], c: 0 },
+                { q: "The term 'Off-side' is related to which sport?", a: ["Basketball", "Badminton", "Football", "Volleyball"], c: 2 },
+                { q: "Which fundamental right is called the 'Heart and Soul' of the Indian Constitution by B. R. Ambedkar?", a: ["Right to Freedom", "Right to Equality", "Right to Constitutional Remedies", "Right against Exploitation"], c: 2 },
+            ]
+        },
+        "jee": {
+            title: "JEE - Joint Entrance Examination (Engineering)",
+            questions: [
+                { q: "The dimensions of the coefficient of viscosity ($\eta$) are:", a: ["$[M L^{-1} T^{-1}]$", "$[M L T^{-1}]$", "$[M L^{-2} T^{-1}]$", "$[M^0 L^0 T^0]$"], c: 0 },
+                { q: "The bond order of the $O_2^{-}$ ion is:", a: ["1.5", "2.0", "2.5", "3.0"], c: 0 },
+                { q: "The rate of a first-order reaction depends on:", a: ["Concentration of one reactant", "Concentration of both reactants", "Temperature only", "Pressure only"], c: 0 },
+                { q: "What is the magnitude of the gravitational acceleration at the surface of the Earth?", a: ["$8.8 m/s^2$", "$9.8 m/s^2$", "$10.8 m/s^2$", "$11.8 m/s^2$"], c: 1 },
+                { q: "The number of atoms in $12g$ of $C^{12}$ is:", a: ["$6.022 \times 10^{22}$", "$12.044 \times 10^{23}$", "$6.022 \times 10^{23}$", "$12.044 \times 10^{22}$"], c: 2 },
+                { q: "In Calculus, the derivative of $e^{2x}$ is:", a: ["$e^{2x}$", "$2e^{2x}$", "$e^{x}$", "$2x e^{2x}$"], c: 1 },
+                { q: "A p-n junction diode acts as a/an:", a: ["Oscillator", "Amplifier", "Rectifier", "Filter"], c: 2 },
+                { q: "The phenomenon of light that causes the blue color of the sky is:", a: ["Refraction", "Interference", "Scattering", "Polarization"], c: 2 },
+                { q: "The most abundant gas in the Earth's atmosphere is:", a: ["Oxygen", "Argon", "Carbon Dioxide", "Nitrogen"], c: 3 },
+                { q: "The $sp^2$ hybridization is found in:", a: ["$CH_4$", "$C_2H_6$", "$C_2H_4$", "$H_2O$"], c: 2 },
+            ]
+        },
+        "upsc": {
+            title: "UPSC - Union Public Service Commission (Civil Services)",
+            questions: [
+                { q: "The concept of 'Basic Structure' of the Indian Constitution was propounded in which case?", a: ["Minerva Mills case", "Golkas Nath case", "Kesavananda Bharati case", "Waman Rao case"], c: 2 },
+                { q: "The 'Zero Hour' in the Indian Parliament is:", a: ["First hour of the session", "Time when question hour is held", "Time immediately following the Question Hour", "Last hour of the session"], c: 2 },
+                { q: "Who was the Viceroy of India when the Quit India Movement was launched?", a: ["Lord Linlithgow", "Lord Wavell", "Lord Mountbatten", "Lord Irwin"], c: 0 },
+                { q: "Which region of India is known as the 'Rice Bowl of India'?", a: ["Indo-Gangetic Plain", "Krishna-Godavari Delta Region", "North-Eastern Region", "Thar Desert"], c: 1 },
+                { q: "The purpose of the 'CRISPR-Cas9' technology is:", a: ["Creating new alloys", "Gene editing", "Water purification", "Space exploration"], c: 1 },
+                { q: "What does 'SLR' stand for in the context of Indian Banking?", a: ["Standard Liquidity Ratio", "Statutory Liquidity Ratio", "Secure Loan Requirement", "Short-term Lending Rate"], c: 1 },
+                { q: "The 'Western Ghats' are an example of a/an:", a: ["Block mountain", "Fold mountain", "Volcanic mountain", "Residual mountain"], c: 0 },
+                { q: "What is the primary objective of the 'FAME India Scheme'?", a: ["Financial aid to farmers", "Faster adoption of Electric Vehicles", "Promoting film production", "Developing fishing ports"], c: 1 },
+                { q: "Which metal is an essential component of the Vitamin $B_{12}$?", a: ["Iron", "Zinc", "Cobalt", "Nickel"], c: 2 },
+                { q: "The doctrine of 'Lapse' was introduced by:", a: ["Lord Dalhousie", "Lord Hastings", "Lord Canning", "Lord Curzon"], c: 0 },
+            ]
+        },
+    };
+
+    let currentCourseKey = null;
+    let userAnswers = {}; // { questionIndex: selectedOptionIndex }
+
+    const appDiv = document.getElementById('app');
+
+    function renderLandingPage() {
+        currentCourseKey = null;
+        userAnswers = {};
+        const courseKeys = Object.keys(QUIZ_DATA);
+
+        appDiv.innerHTML = `
+            <div class="card p-6 md:p-10 w-full max-w-2xl mx-4">
+                <h1 class="text-3xl font-extrabold text-center text-gray-800 mb-2">Revision Test App</h1>
+                <p class="text-center text-gray-600 mb-8">Select your course to begin a 10-question MCQ quiz.</p>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    ${courseKeys.map(key => `
+                        <button onclick="startQuiz('${key}')" class="course-button">
+                            ${QUIZ_DATA[key].title.split(' ')[0]}
+                            <span class="block text-xs font-normal text-gray-500">${key.toUpperCase()}</span>
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    window.startQuiz = (courseKey) => {
+        currentCourseKey = courseKey;
+        userAnswers = {};
+        renderQuiz();
+    };
+
+    function renderQuiz() {
+        if (!currentCourseKey) {
+            renderLandingPage();
+            return;
+        }
+
+        const quiz = QUIZ_DATA[currentCourseKey];
+        const courseTitle = quiz.title;
+
+        const quizHTML = `
+            <div class="card p-6 md:p-10 w-full max-w-4xl mx-4">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">${courseTitle} Revision Test</h2>
+                <p class="text-sm text-gray-500 mb-6">Answer all 10 questions. Your progress will be saved automatically.</p>
+
+                <form id="quizForm">
+                    ${quiz.questions.map((qData, qIndex) => `
+                        <div class="mb-8 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                            <p class="font-semibold text-lg text-gray-700 mb-3">
+                                ${qIndex + 1}. ${qData.q}
+                            </p>
+                            ${qData.a.map((option, oIndex) => `
+                                <label class="radio-label block">
+                                    <input type="radio" 
+                                           name="q${qIndex}" 
+                                           value="${oIndex}" 
+                                           class="mr-3 text-green-500 focus:ring-green-500"
+                                           onchange="handleAnswerChange(${qIndex}, ${oIndex})"
+                                           ${userAnswers[qIndex] === oIndex ? 'checked' : ''}>
+                                    <span class="text-gray-700">${option}</span>
+                                </label>
+                            `).join('')}
+                        </div>
+                    `).join('')}
+
+                    <div class="mt-8 flex justify-center">
+                        <button type="button" onclick="submitQuiz()" class="submit-button shadow-lg hover:shadow-xl">
+                            Submit Test & View Results
+                        </button>
+                    </div>
+                    <div class="mt-4 text-center">
+                        <button type="button" onclick="renderLandingPage()" class="text-sm text-gray-500 hover:text-gray-700">
+                            ← Back to Course Selection
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        appDiv.innerHTML = quizHTML;
+    }
+
+    window.handleAnswerChange = (qIndex, oIndex) => {
+        userAnswers[qIndex] = oIndex;
+        // console.log('Answers:', userAnswers); // Optional: for debugging
+    }
+
+    window.submitQuiz = () => {
+        const quiz = QUIZ_DATA[currentCourseKey];
+        let correctCount = 0;
+        let resultsHTML = '';
+        const totalQuestions = quiz.questions.length;
+
+        quiz.questions.forEach((qData, qIndex) => {
+            const userAnswer = userAnswers[qIndex];
+            const isCorrect = userAnswer === qData.c;
+            
+            const userSelectionText = userAnswer !== undefined 
+                ? qData.a[userAnswer] 
+                : '<span class="text-red-500 font-medium">Unanswered</span>';
+            
+            const correctAnswerText = qData.a[qData.c];
+
+            const resultClass = isCorrect ? 'border-green-400 bg-green-50' : 'border-red-400 bg-red-50';
+            const statusIcon = isCorrect ? '✔️' : '❌';
+
+            if (isCorrect) {
+                correctCount++;
+            }
+
+            resultsHTML += `
+                <div class="mb-6 p-4 border-l-4 ${resultClass} rounded-md shadow-sm">
+                    <p class="font-bold text-gray-800 mb-1">${qIndex + 1}. ${qData.q}</p>
+                    <div class="text-sm space-y-1">
+                        <p class="text-gray-600">Your Answer: ${userSelectionText}</p>
+                        ${!isCorrect ? 
+                            `<p class="text-green-600 font-semibold">Correct Answer: ${correctAnswerText}</p>` :
+                            `<p class="text-green-600 font-semibold flex items-center">${statusIcon} Correct!</p>`
+                        }
+                    </div>
+                </div>
+            `;
+        });
+
+        const scorePercentage = ((correctCount / totalQuestions) * 100).toFixed(0);
+
+        const resultsPage = `
+            <div class="card p-6 md:p-10 w-full max-w-4xl mx-4">
+                <h2 class="text-3xl font-extrabold text-center text-gray-800 mb-2">${quiz.title} Results</h2>
+                
+                <div class="my-6 p-6 text-center border-2 border-dashed border-gray-300 rounded-lg">
+                    <p class="text-xl font-medium text-gray-700">Your Score</p>
+                    <p class="text-5xl font-extrabold mt-1" style="color: var(--primary-color);">
+                        ${correctCount} / ${totalQuestions}
+                    </p>
+                    <p class="text-lg text-gray-500 mt-1">(${scorePercentage}%)</p>
+                </div>
+
+                <h3 class="text-xl font-bold text-gray-700 mb-4 border-b pb-2">Detailed Review (${totalQuestions - correctCount} Mistakes)</h3>
+                
+                ${resultsHTML}
+
+                <div class="mt-8 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+                    <button onclick="retakeQuiz()" class="submit-button shadow-lg hover:shadow-xl">
+                        Retake Test
+                    </button>
+                    <button onclick="renderLandingPage()" class="submit-button !bg-gray-500 hover:!bg-gray-600">
+                        Select Another Course
+                    </button>
+                </div>
+            </div>
+        `;
+
+        appDiv.innerHTML = resultsPage;
+    };
+
+    window.retakeQuiz = () => {
+        // Reset answers and re-render the quiz for the current course
+        userAnswers = {};
+        renderQuiz();
+    };
+
+    // Make functions globally accessible for inline onclick handlers
+    window.renderLandingPage = renderLandingPage;
+    window.startQuiz = startQuiz;
+    window.submitQuiz = submitQuiz;
+    window.retakeQuiz = retakeQuiz;
+
+</script>
+</body>
+</html>
