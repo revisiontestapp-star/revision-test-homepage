@@ -2,406 +2,456 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Revision Test App</title>
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Revision Test</title>
     <style>
-        /* Custom styles for better aesthetics */
+        /* --- 1. CORPORATE IDENTITY & VARS --- */
         :root {
-            --primary-color: #10B981; /* Emerald 500 */
+            --primary-blue: #2D75C8;
+            --secondary-blue: #1A5494;
+            --highlight-orange: #F68B1F;
+            --success-green: #5AB646;
+            --bg-color: #F4F7FB;
+            --text-dark: #333333;
+            --text-grey: #666666;
+            --card-shadow: 0 8px 24px rgba(0,0,0,0.05);
+            --input-border: #E0E0E0;
         }
+        
+        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+        
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* Light gray background */
-        }
-        .app-container {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            margin: 0; padding: 0;
             min-height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: flex-start; /* Start from the top, allowing scrolling */
-            padding-top: 4rem;
-            padding-bottom: 4rem;
+            flex-direction: column;
+            user-select: none;
         }
-        .card {
-            background-color: white;
-            border-radius: 1rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            transition: transform 0.2s;
+
+        /* --- 2. COMPONENTS --- */
+        .hidden { display: none !important; }
+        
+        /* Spinner */
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9); z-index: 2000;
+            display: flex; justify-content: center; align-items: center;
+            backdrop-filter: blur(4px);
         }
-        .course-button {
-            padding: 1rem 1.5rem;
-            background-color: #ecfdf5;
-            border: 2px solid var(--primary-color);
-            color: #065F46;
-            font-weight: 600;
-            text-align: center;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
+        .spinner {
+            width: 45px; height: 45px;
+            border: 4px solid #f0f0f0; border-top: 4px solid var(--primary-blue);
+            border-radius: 50%; animation: spin 0.8s linear infinite;
         }
-        .course-button:hover {
-            background-color: #D1FAE5;
-            transform: translateY(-2px);
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Buttons */
+        .btn-primary {
+            width: 100%; padding: 16px;
+            background: var(--primary-blue);
+            color: white; border: none; border-radius: 8px;
+            font-size: 15px; font-weight: 600; letter-spacing: 0.5px;
+            cursor: pointer; transition: background 0.2s;
+            box-shadow: 0 4px 12px rgba(45, 117, 200, 0.2);
         }
-        .submit-button {
-            background-color: var(--primary-color);
-            color: white;
-            font-weight: 700;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            transition: background-color 0.2s;
+        .btn-primary:active { transform: scale(0.99); background: var(--secondary-blue); }
+        
+        .btn-link {
+            background: none; border: none;
+            color: var(--primary-blue); font-weight: 600;
+            cursor: pointer; font-size: 14px; padding: 5px;
         }
-        .submit-button:hover {
-            background-color: #059669; /* Emerald 600 */
+
+        /* Inputs */
+        .input-group { margin-bottom: 18px; position: relative; }
+        .input-field {
+            width: 100%; padding: 14px 16px;
+            border: 1px solid var(--input-border); border-radius: 8px;
+            font-size: 15px; background: white; color: var(--text-dark);
+            transition: border-color 0.2s;
         }
-        .radio-label {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            border: 1px solid #d1d5db;
-            margin-bottom: 0.5rem;
-            cursor: pointer;
-            transition: background-color 0.1s;
+        .input-field:focus { border-color: var(--primary-blue); }
+        
+        /* Phone Group */
+        .phone-group { display: flex; gap: 10px; }
+        .phone-select {
+            width: 110px; padding: 14px;
+            border: 1px solid var(--input-border); border-radius: 8px;
+            background: white; font-size: 15px; color: var(--text-dark);
         }
-        .radio-label:hover {
-            background-color: #f9fafb;
+
+        /* --- 3. AUTH SECTION --- */
+        #auth-section {
+            flex: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 20px; width: 100%;
         }
-        input[type="radio"]:checked + span {
-            font-weight: 600;
-            color: var(--primary-color);
+        .auth-wrapper {
+            width: 100%; max-width: 420px;
+            background: white; padding: 40px;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .logo-container { text-align: center; margin-bottom: 35px; }
+        .app-logo {
+            width: 72px; height: 72px;
+            border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            object-fit: cover; margin-bottom: 15px;
+        }
+        .brand-title { color: var(--text-dark); font-size: 22px; font-weight: 700; margin: 0; }
+        .brand-subtitle { color: var(--text-grey); font-size: 13px; margin-top: 6px; }
+
+        .password-wrapper { position: relative; }
+        .toggle-password {
+            position: absolute; right: 15px; top: 15px;
+            cursor: pointer; color: #999; font-size: 18px;
+        }
+
+        /* --- 4. DASHBOARD SECTION (Corporate Style) --- */
+        #dashboard-section {
+            padding: 20px; padding-bottom: 50px;
+            width: 100%; display: flex; justify-content: center;
+            min-height: 100vh;
+        }
+        .dashboard-wrapper { width: 100%; max-width: 900px; }
+        
+        /* Dashboard Header */
+        .dash-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 30px; background: white;
+            padding: 20px 25px; border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            border-left: 5px solid var(--primary-blue);
+        }
+        .user-info h2 { margin: 0; font-size: 18px; font-weight: 700; color: var(--text-dark); }
+        .user-info p { margin: 4px 0 0; font-size: 13px; color: var(--text-grey); }
+        
+        /* Grid */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 20px;
+        }
+        
+        /* Modern Clean Cards */
+        .course-card {
+            background: white; border-radius: 12px;
+            padding: 25px 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            border: 1px solid #eee;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            position: relative; overflow: hidden;
+        }
+        .course-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(45, 117, 200, 0.15);
+            border-color: rgba(45, 117, 200, 0.3);
+        }
+        
+        /* SVG Icons */
+        .icon-box {
+            width: 48px; height: 48px;
+            margin-bottom: 15px;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .icon-box svg { width: 100%; height: 100%; fill: var(--primary-blue); }
+        
+        .course-name { 
+            font-weight: 600; color: var(--text-dark); 
+            font-size: 15px; margin-bottom: 20px; 
+            flex-grow: 1;
+        }
+        
+        /* Minimal Status Indicator */
+        .status-dot {
+            height: 4px; width: 40px; border-radius: 2px;
+        }
+        .dot-locked { background-color: #E0E0E0; }
+        .dot-open { background-color: var(--success-green); }
+        
+        .card-footer {
+            width: 100%; font-size: 13px; font-weight: 700; letter-spacing: 0.5px;
+            padding-top: 12px; border-top: 1px solid #f5f5f5;
+            color: var(--text-grey);
+            text-transform: uppercase;
+        }
+        .card-footer.active { color: var(--success-green); }
+        .card-footer.locked { color: var(--highlight-orange); }
+
+        /* --- 5. MODALS --- */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 3000;
+            display: flex; justify-content: center; align-items: center; padding: 20px;
+            backdrop-filter: blur(3px);
+        }
+        .modal-content {
+            background: white; padding: 30px; border-radius: 16px;
+            width: 100%; max-width: 380px; text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
         }
     </style>
 </head>
 <body>
 
-<div id="app" class="app-container">
-    <!-- Content will be rendered here by JavaScript -->
-    <div id="loading" class="text-gray-600 text-lg">Loading App...</div>
-</div>
+    <div id="loading-overlay" class="hidden"><div class="spinner"></div></div>
 
-<script type="module">
-    // --- Firebase/Canvas Boilerplate (Not used for quiz, but required for the environment) ---
-    // The quiz data is kept local, so no Firestore connection is strictly necessary, 
-    // but the environment mandates these imports and initialization structure.
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-    import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <div id="auth-section">
+        <div class="auth-wrapper">
+            <div class="logo-container">
+                <img src="https://lh3.googleusercontent.com/d/1yFivjS463NWwftZxyij-lmK3wM0vOVmt" class="app-logo" alt="Logo">
+                <h2 class="brand-title">Revision Test</h2>
+                <p class="brand-subtitle">Professional Exam Series</p>
+            </div>
 
-    let app;
-    let db;
-    let auth;
-    let userId;
+            <div id="login-form">
+                <div class="input-group">
+                    <input type="email" id="login-email" class="input-field" placeholder="Email Address" autocapitalize="none">
+                </div>
+                <div class="input-group password-wrapper">
+                    <input type="password" id="login-pass" class="input-field" placeholder="Password">
+                    <span class="toggle-password" onclick="togglePass('login-pass')">👁️</span>
+                </div>
+                <button class="btn-primary" onclick="handleLogin()">Sign In</button>
+                
+                <div style="display: flex; justify-content: space-between; margin-top: 18px; font-size: 13px;">
+                    <span style="color: #666">No account? <strong onclick="switchAuth('signup')" style="color:var(--primary-blue); cursor:pointer">Sign Up</strong></span>
+                    <strong onclick="showForgotModal()" style="color:var(--highlight-orange); cursor:pointer">Forgot Password?</strong>
+                </div>
+            </div>
 
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+            <div id="signup-form" class="hidden">
+                <div class="input-group">
+                    <input type="text" id="signup-name" class="input-field" placeholder="Full Name *">
+                </div>
+                <div class="input-group">
+                    <input type="email" id="signup-email" class="input-field" placeholder="Email Address *" autocapitalize="none">
+                </div>
+                
+                <div class="input-group phone-group">
+                    <select id="country-code" class="phone-select">
+                        <option value="+91">+91 (IN)</option>
+                        <option value="+1">+1 (US)</option>
+                        <option value="+44">+44 (UK)</option>
+                        <option value="+61">+61 (AU)</option>
+                        <option value="+971">+971 (UAE)</option>
+                        <option value="+65">+65 (SG)</option>
+                        <option value="">Other</option>
+                    </select>
+                    <input type="tel" id="signup-phone" class="input-field" placeholder="Mobile Number *" pattern="[0-9]*">
+                </div>
 
-    window.onload = async function() {
-        try {
-            if (Object.keys(firebaseConfig).length > 0) {
-                app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                setLogLevel('Debug'); // Enable Firestore logging
+                <div class="input-group password-wrapper">
+                    <input type="password" id="signup-pass" class="input-field" placeholder="Create Password *">
+                    <span class="toggle-password" onclick="togglePass('signup-pass')">👁️</span>
+                </div>
+                <button class="btn-primary" onclick="handleSignup()">Create Account</button>
+                
+                <div style="text-align: center; margin-top: 18px; font-size: 13px;">
+                    <span style="color: #666">Already a member? <strong onclick="switchAuth('login')" style="color:var(--primary-blue); cursor:pointer">Sign In</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
+    <div id="dashboard-section" class="hidden">
+        <div class="dashboard-wrapper">
+            <div class="dash-header">
+                <div class="user-info">
+                    <h2 id="user-name-display">Welcome Back</h2>
+                    <p>Select a course to proceed</p>
+                </div>
+                <img src="https://lh3.googleusercontent.com/d/1yFivjS463NWwftZxyij-lmK3wM0vOVmt" style="width: 40px; height: 40px; border-radius: 50%;" alt="Profile">
+            </div>
+
+            <div class="grid-container" id="course-grid">
+                </div>
+            
+            <div style="text-align: center; margin-top: 40px;">
+                 <button class="btn-link" onclick="handleLogout()" style="color: #e74c3c; opacity:0.8;">Sign Out</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="forgot-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color:var(--text-dark)">Reset Password</h3>
+            <p style="color:#666; font-size:14px; line-height:1.6;">Contact support to recover your account.</p>
+            <div style="background:#f8f9fa; padding:15px; border-radius:8px; margin:20px 0; text-align:left; font-size:14px;">
+                <div style="margin-bottom:8px">📧 revisiontestapp@gmail.com</div>
+                <div>📞 +91 8754955367</div>
+            </div>
+            <button class="btn-primary" style="background:#eee; color:#333; box-shadow:none;" onclick="closeModal('forgot-modal')">Close</button>
+        </div>
+    </div>
+
+    <div id="paywall-modal" class="modal hidden">
+        <div class="modal-content">
+            <div style="font-size: 36px; margin-bottom: 15px;">🔒</div>
+            <h3 style="margin:0 0 10px; color: var(--text-dark);">Course Locked</h3>
+            <p style="color:#666; font-size:14px; margin-bottom:25px; line-height:1.5;">
+                You must purchase the <strong id="paywall-course-name" style="color:var(--primary-blue)"></strong> course to access this content.
+            </p>
+            <button class="btn-primary" onclick="closeModal('paywall-modal')">OK, Got it</button>
+        </div>
+    </div>
+
+    <script>
+        // CONFIG
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyH8Jv7hR9V-TEOgh5T0ALnmNP2UWcpDkB4MRZmX6XpaeVyTs7xV3oPR9prgodNVrXs/exec";
+        
+        let deviceId = localStorage.getItem('device_id') || 'web_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('device_id', deviceId);
+
+        // SVG Icons
+        const ICONS = {
+            medical: '<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-1.99.9-1.99 2L3 19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-1 11h-4v4h-4v-4H6v-4h4V6h4v4h4v4z"/></svg>',
+            engineer: '<svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>',
+            gov: '<svg viewBox="0 0 24 24"><path d="M4 10v7h3v-7H4zm6 0v7h3v-7h-3zM2 22h19v-3H2v3zm14-12v7h3v-7h-3zm-4.5-9L2 6v2h19V6l-9.5-5z"/></svg>',
+            chart: '<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>',
+            train: '<svg viewBox="0 0 24 24"><path d="M12 2c-4 0-8 .5-8 4v9.5C4 17.43 5.57 19 7.5 19L6 20.5v.5h2.23l2-2H14l2 2h2v-.5L16.5 19c1.93 0 3.5-1.57 3.5-3.5V6c0-3.5-3.58-4-8-4zM7.5 17c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm3.5-7H6V6h5v4zm2 0V6h5v4h-5zm3.5 7c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>',
+            bank: '<svg viewBox="0 0 24 24"><path d="M4 10h3v7H4zM10.5 10h3v7h-3zM2 19h20v3H2zM17 10h3v7h-3zM12 1L2 6v2h20V6z"/></svg>',
+            globe: '<svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zm6.93 6h-2.95c-.32-1.25-.78-2.45-1.38-3.56 1.84.63 3.37 1.91 4.33 3.56zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14C4.1 13.36 4 12.69 4 12s.1-1.36.26-2h3.38c-.08.66-.14 1.32-.14 2 0 .68.06 1.34.14 2H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56-1.84-.63-3.37-1.9-4.33-3.56zm2.95-8H5.08c.96-1.66 2.49-2.93 4.33-3.56-.6 1.11-1.06 2.31-1.38 3.56zM12 19.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43 1.43-1.08 2.76-1.91 3.96zM14.34 14H9.66c-.09-.66-.16-1.32-.16-2 0-.68.07-1.35.16-2h4.68c.09.65.16 1.32.16 2 0 .68-.07 1.34-.16 2zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95c-.96 1.65-2.49 2.93-4.33 3.56zM16.36 14c.08-.66.14-1.32.14-2 0-.68-.06-1.34-.14-2h3.38c.16.64.26 1.31.26 2s-.1 1.36-.26 2h-3.38z"/></svg>'
+        };
+
+        const COURSES = [
+            { id: "NEET", name: "NEET", icon: ICONS.medical },
+            { id: "JEE", name: "JEE", icon: ICONS.engineer },
+            { id: "UPSC", name: "UPSC", icon: ICONS.gov },
+            { id: "SSC_CGL", name: "SSC CGL", icon: ICONS.chart },
+            { id: "SSC_CHSL", name: "SSC CHSL", icon: ICONS.chart },
+            { id: "RRB_NTPC", name: "RRB NTPC", icon: ICONS.train },
+            { id: "BANKING", name: "Banking", icon: ICONS.bank },
+            { id: "IELTS", name: "IELTS", icon: ICONS.globe },
+            { id: "OET", name: "OET", icon: ICONS.medical }
+        ];
+
+        let userPermissions = {};
+
+        // UTILS
+        function el(id) { return document.getElementById(id); }
+        function show(id) { el(id).classList.remove('hidden'); }
+        function hide(id) { el(id).classList.add('hidden'); }
+        
+        function togglePass(id) {
+            const x = el(id);
+            x.type = x.type === "password" ? "text" : "password";
+        }
+
+        function switchAuth(type) {
+            type === 'signup' ? (hide('login-form'), show('signup-form')) : (hide('signup-form'), show('login-form'));
+        }
+
+        // --- SIGNUP LOGIC (Lowercase Email + Compulsory Fields) ---
+        function handleSignup() {
+            const name = el('signup-name').value.trim();
+            // Force Lowercase for Email
+            const email = el('signup-email').value.trim().toLowerCase();
+            const pass = el('signup-pass').value.trim();
+            const countryCode = el('country-code').value;
+            const phoneNum = el('signup-phone').value.trim();
+
+            if(!name || !email || !pass || !phoneNum || !countryCode) {
+                return alert("All fields are mandatory.");
+            }
+
+            const fullPhone = countryCode + phoneNum;
+
+            apiCall({ 
+                action: 'signup', name: name, email: email, 
+                phone: fullPhone, password: pass, deviceId: deviceId 
+            }, (res) => {
+                if(res.status === 'success') {
+                    alert("Account Created! Please Sign In.");
+                    switchAuth('login');
                 } else {
-                    await signInAnonymously(auth);
+                    alert(res.message);
                 }
-                userId = auth.currentUser?.uid || crypto.randomUUID();
+            });
+        }
+
+        // --- LOGIN LOGIC (Lowercase Email) ---
+        function handleLogin() {
+            // Force Lowercase for Email match
+            const email = el('login-email').value.trim().toLowerCase();
+            const pass = el('login-pass').value.trim();
+            
+            if(!email || !pass) return alert("Enter email and password.");
+            
+            apiCall({ action: 'login', email: email, password: pass, deviceId: deviceId }, (res) => {
+                if(res.status === 'success') {
+                    userPermissions = res.permissions;
+                    localStorage.setItem('user_email', email);
+                    el('user-name-display').innerText = "Hello, Student"; 
+                    loadDashboard();
+                } else {
+                    alert(res.message);
+                }
+            });
+        }
+
+        // --- MODERN DASHBOARD RENDERER ---
+        function loadDashboard() {
+            hide('auth-section');
+            show('dashboard-section');
+            
+            const grid = el('course-grid');
+            grid.innerHTML = "";
+            
+            COURSES.forEach(course => {
+                const isUnlocked = userPermissions[course.id] === true;
+                
+                const card = document.createElement('div');
+                card.className = 'course-card';
+                card.onclick = () => checkPermission(course.id, course.name);
+                
+                // UPDATED LABEL: "ENTER" + Arrow
+                card.innerHTML = `
+                    <div class="icon-box">${course.icon}</div>
+                    <div class="course-name">${course.name}</div>
+                    <div class="status-dot ${isUnlocked ? 'dot-open' : 'dot-locked'}"></div>
+                    <div class="card-footer ${isUnlocked ? 'active' : 'locked'}">
+                        ${isUnlocked ? 'ENTER ➔' : 'LOCKED'}
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function checkPermission(courseKey, courseName) {
+            if (userPermissions[courseKey] === true) {
+                window.location.href = courseKey + ".html";
             } else {
-                console.warn("Firebase configuration not found. Running in local-only mode.");
-                userId = crypto.randomUUID();
+                el('paywall-course-name').innerText = courseName;
+                show('paywall-modal');
             }
-        } catch (error) {
-            console.error("Firebase initialization failed, running in local-only mode:", error);
-        } finally {
-            // Start the application logic
-            renderLandingPage();
-        }
-    }
-    // ----------------------------------------------------------------------------------------
-
-    const QUIZ_DATA = {
-        "neet": {
-            title: "NEET - Medical Entrance Exam",
-            questions: [
-                { q: "Which of the following is responsible for initiating the heart beat?", a: ["SA Node", "AV Node", "Bundle of His", "Purkinje fibers"], c: 0 },
-                { q: "The functional unit of kidney is:", a: ["Ureter", "Nephron", "Medulla", "Pelvis"], c: 1 },
-                { q: "Which element is essential for the structure of chlorophyll?", a: ["Iron", "Calcium", "Magnesium", "Potassium"], c: 2 },
-                { q: "Which vitamin deficiency causes night blindness?", a: ["Vitamin B", "Vitamin C", "Vitamin D", "Vitamin A"], c: 3 },
-                { q: "What is the pH value of human blood?", a: ["6.4", "7.4", "8.2", "7.8"], c: 1 },
-                { q: "What type of cell division produces gametes?", a: ["Mitosis", "Meiosis", "Binary Fission", "Budding"], c: 1 },
-                { q: "The powerhouse of the cell is:", a: ["Nucleus", "Ribosome", "Mitochondria", "Endoplasmic Reticulum"], c: 2 },
-                { q: "Largest endocrine gland in the human body is:", a: ["Pituitary", "Thyroid", "Adrenal", "Pancreas"], c: 1 },
-                { q: "Photosynthesis occurs in:", a: ["Mitochondria", "Nucleus", "Chloroplasts", "Cytoplasm"], c: 2 },
-                { q: "The term 'Gene' was coined by:", a: ["Gregor Mendel", "Hugo de Vries", "T. H. Morgan", "W. L. Johannsen"], c: 3 },
-            ]
-        },
-        "rrb ntpc": {
-            title: "RRB NTPC - Non-Technical Popular Categories",
-            questions: [
-                { q: "What is the capital of Austria?", a: ["Berlin", "Vienna", "Brussels", "Rome"], c: 1 },
-                { q: "The longest river in India is:", a: ["Yamuna", "Godavari", "Ganga", "Brahmaputra"], c: 2 },
-                { q: "Who invented the light bulb?", a: ["Nikola Tesla", "Isaac Newton", "Thomas Edison", "Albert Einstein"], c: 2 },
-                { q: "What is the currency of Japan?", a: ["Yuan", "Won", "Yen", "Dollar"], c: 2 },
-                { q: "Which planet is known as the 'Red Planet'?", a: ["Venus", "Jupiter", "Mars", "Saturn"], c: 2 },
-                { q: "Which state is known as the 'Spice Garden of India'?", a: ["Karnataka", "Kerala", "Andhra Pradesh", "Tamil Nadu"], c: 1 },
-                { q: "The term 'Googly' is associated with which sport?", a: ["Football", "Hockey", "Cricket", "Tennis"], c: 2 },
-                { q: "The first Indian woman to climb Mount Everest is:", a: ["Arunima Sinha", "Bachendri Pal", "Santosh Yadav", "Malavath Poorna"], c: 1 },
-                { q: "What is the minimum age to be a member of the Lok Sabha?", a: ["18 years", "21 years", "25 years", "30 years"], c: 2 },
-                { q: "Where are the headquarters of the World Health Organization (WHO)?", a: ["New York", "London", "Geneva", "Paris"], c: 2 },
-            ]
-        },
-        "nclex": {
-            title: "NCLEX - National Council Licensure Examination (Nursing)",
-            questions: [
-                { q: "A patient is hypotensive, tachycardic, and has cool, clammy skin. Which type of shock is this indicative of?", a: ["Cardiogenic", "Hypovolemic", "Septic", "Neurogenic"], c: 1 },
-                { q: "The primary purpose of deep breathing and coughing exercises post-operatively is to:", a: ["Prevent deep vein thrombosis (DVT)", "Prevent atelectasis and pneumonia", "Reduce pain perception", "Increase gastrointestinal motility"], c: 1 },
-                { q: "Which electrolyte imbalance is associated with the 'Trousseau sign' and 'Chvostek sign'?", a: ["Hyperkalemia", "Hypocalcemia", "Hypernatremia", "Hypomagnesemia"], c: 1 },
-                { q: "What is the most common adverse effect of opioid analgesics?", a: ["Diarrhea", "Hypertension", "Respiratory depression", "Tinnitus"], c: 2 },
-                { q: "The proper position for administering an enema is:", a: ["Supine", "Fowler's", "Sims' left lateral", "Prone"], c: 2 },
-                { q: "A score of 8 on the Apgar scale 5 minutes after birth indicates:", a: ["Severe distress", "Moderate difficulty", "Normal adaptation", "Need for immediate resuscitation"], c: 2 },
-                { q: "Which isolation precaution is required for a patient with Pulmonary Tuberculosis?", a: ["Contact", "Droplet", "Airborne", "Standard"], c: 2 },
-                { q: "What is the normal range for adult respiratory rate (breaths per minute)?", a: ["18-24", "10-14", "12-20", "20-30"], c: 2 },
-                { q: "Before administering a new medication, the first step a nurse should take is to:", a: ["Check the patient's ID band", "Review the medication's side effects", "Assess the patient's vital signs", "Check the expiration date"], c: 0 },
-                { q: "The priority nursing action when a patient begins to have a seizure is to:", a: ["Insert a tongue blade", "Restrain the patient", "Call a doctor immediately", "Ensure patient safety and airway"], c: 3 },
-            ]
-        },
-        "ssc cgl": {
-            title: "SSC CGL - Combined Graduate Level Exam",
-            questions: [
-                { q: "Who was the founder of the Mauryan Empire?", a: ["Ashoka", "Bindusara", "Chandragupta Maurya", "Samudragupta"], c: 2 },
-                { q: "The instrument used to measure the intensity of earthquakes is:", a: ["Barometer", "Hydrometer", "Seismograph", "Ammeter"], c: 2 },
-                { q: "The smallest bone in the human body is:", a: ["Femur", "Tibia", "Stapes", "Ulna"], c: 2 },
-                { q: "What is the full form of GST in the Indian context?", a: ["General Sales Tax", "Goods and Services Tax", "Global Sales Tax", "Government Sales Tax"], c: 1 },
-                { q: "Which acid is present in a lemon?", a: ["Lactic Acid", "Ascorbic Acid", "Citric Acid", "Tartaric Acid"], c: 2 },
-                { q: "The 'Dandi March' was started in which year?", a: ["1928", "1930", "1932", "1935"], c: 1 },
-                { q: "Which metal is the best conductor of electricity?", a: ["Gold", "Copper", "Aluminum", "Silver"], c: 3 },
-                { q: "The headquarters of the Reserve Bank of India (RBI) is located in:", a: ["New Delhi", "Mumbai", "Kolkata", "Chennai"], c: 1 },
-                { q: "Which article of the Indian Constitution deals with the 'Right to Equality'?", a: ["Article 19", "Article 14", "Article 21", "Article 32"], c: 1 },
-                { q: "Which layer of the atmosphere is closest to the Earth's surface?", a: ["Stratosphere", "Mesosphere", "Thermosphere", "Troposphere"], c: 3 },
-            ]
-        },
-        "ssc chsl": {
-            title: "SSC CHSL - Combined Higher Secondary Level Exam",
-            questions: [
-                { q: "What is the study of birds called?", a: ["Entomology", "Ornithology", "Virology", "Ophiology"], c: 1 },
-                { q: "What is the chemical symbol for Gold?", a: ["Ag", "Au", "Fe", "Pb"], c: 1 },
-                { q: "Which country is home to the 'Great Barrier Reef'?", a: ["Canada", "Mexico", "Australia", "Brazil"], c: 2 },
-                { q: "The Battle of Plassey was fought in which year?", a: ["1757", "1764", "1772", "1780"], c: 0 },
-                { q: "Which of the following is a Kharif crop?", a: ["Wheat", "Barley", "Rice", "Gram"], c: 2 },
-                { q: "Who is the author of the book 'Ignited Minds'?", a: ["Jawaharlal Nehru", "APJ Abdul Kalam", "R. K. Narayan", "Vikram Seth"], c: 1 },
-                { q: "The deepest oceanic trench in the world is the:", a: ["Puerto Rico Trench", "Java Trench", "Mariana Trench", "Tonga Trench"], c: 2 },
-                { q: "In which year did India win its first Cricket World Cup?", a: ["1983", "1987", "2003", "2011"], c: 0 },
-                { q: "The term 'Off-side' is related to which sport?", a: ["Basketball", "Badminton", "Football", "Volleyball"], c: 2 },
-                { q: "Which fundamental right is called the 'Heart and Soul' of the Indian Constitution by B. R. Ambedkar?", a: ["Right to Freedom", "Right to Equality", "Right to Constitutional Remedies", "Right against Exploitation"], c: 2 },
-            ]
-        },
-        "jee": {
-            title: "JEE - Joint Entrance Examination (Engineering)",
-            questions: [
-                { q: "The dimensions of the coefficient of viscosity ($\eta$) are:", a: ["$[M L^{-1} T^{-1}]$", "$[M L T^{-1}]$", "$[M L^{-2} T^{-1}]$", "$[M^0 L^0 T^0]$"], c: 0 },
-                { q: "The bond order of the $O_2^{-}$ ion is:", a: ["1.5", "2.0", "2.5", "3.0"], c: 0 },
-                { q: "The rate of a first-order reaction depends on:", a: ["Concentration of one reactant", "Concentration of both reactants", "Temperature only", "Pressure only"], c: 0 },
-                { q: "What is the magnitude of the gravitational acceleration at the surface of the Earth?", a: ["$8.8 m/s^2$", "$9.8 m/s^2$", "$10.8 m/s^2$", "$11.8 m/s^2$"], c: 1 },
-                { q: "The number of atoms in $12g$ of $C^{12}$ is:", a: ["$6.022 \times 10^{22}$", "$12.044 \times 10^{23}$", "$6.022 \times 10^{23}$", "$12.044 \times 10^{22}$"], c: 2 },
-                { q: "In Calculus, the derivative of $e^{2x}$ is:", a: ["$e^{2x}$", "$2e^{2x}$", "$e^{x}$", "$2x e^{2x}$"], c: 1 },
-                { q: "A p-n junction diode acts as a/an:", a: ["Oscillator", "Amplifier", "Rectifier", "Filter"], c: 2 },
-                { q: "The phenomenon of light that causes the blue color of the sky is:", a: ["Refraction", "Interference", "Scattering", "Polarization"], c: 2 },
-                { q: "The most abundant gas in the Earth's atmosphere is:", a: ["Oxygen", "Argon", "Carbon Dioxide", "Nitrogen"], c: 3 },
-                { q: "The $sp^2$ hybridization is found in:", a: ["$CH_4$", "$C_2H_6$", "$C_2H_4$", "$H_2O$"], c: 2 },
-            ]
-        },
-        "upsc": {
-            title: "UPSC - Union Public Service Commission (Civil Services)",
-            questions: [
-                { q: "The concept of 'Basic Structure' of the Indian Constitution was propounded in which case?", a: ["Minerva Mills case", "Golkas Nath case", "Kesavananda Bharati case", "Waman Rao case"], c: 2 },
-                { q: "The 'Zero Hour' in the Indian Parliament is:", a: ["First hour of the session", "Time when question hour is held", "Time immediately following the Question Hour", "Last hour of the session"], c: 2 },
-                { q: "Who was the Viceroy of India when the Quit India Movement was launched?", a: ["Lord Linlithgow", "Lord Wavell", "Lord Mountbatten", "Lord Irwin"], c: 0 },
-                { q: "Which region of India is known as the 'Rice Bowl of India'?", a: ["Indo-Gangetic Plain", "Krishna-Godavari Delta Region", "North-Eastern Region", "Thar Desert"], c: 1 },
-                { q: "The purpose of the 'CRISPR-Cas9' technology is:", a: ["Creating new alloys", "Gene editing", "Water purification", "Space exploration"], c: 1 },
-                { q: "What does 'SLR' stand for in the context of Indian Banking?", a: ["Standard Liquidity Ratio", "Statutory Liquidity Ratio", "Secure Loan Requirement", "Short-term Lending Rate"], c: 1 },
-                { q: "The 'Western Ghats' are an example of a/an:", a: ["Block mountain", "Fold mountain", "Volcanic mountain", "Residual mountain"], c: 0 },
-                { q: "What is the primary objective of the 'FAME India Scheme'?", a: ["Financial aid to farmers", "Faster adoption of Electric Vehicles", "Promoting film production", "Developing fishing ports"], c: 1 },
-                { q: "Which metal is an essential component of the Vitamin $B_{12}$?", a: ["Iron", "Zinc", "Cobalt", "Nickel"], c: 2 },
-                { q: "The doctrine of 'Lapse' was introduced by:", a: ["Lord Dalhousie", "Lord Hastings", "Lord Canning", "Lord Curzon"], c: 0 },
-            ]
-        },
-    };
-
-    let currentCourseKey = null;
-    let userAnswers = {}; // { questionIndex: selectedOptionIndex }
-
-    const appDiv = document.getElementById('app');
-
-    function renderLandingPage() {
-        currentCourseKey = null;
-        userAnswers = {};
-        const courseKeys = Object.keys(QUIZ_DATA);
-
-        appDiv.innerHTML = `
-            <div class="card p-6 md:p-10 w-full max-w-2xl mx-4">
-                <h1 class="text-3xl font-extrabold text-center text-gray-800 mb-2">Revision Test App</h1>
-                <p class="text-center text-gray-600 mb-8">Select your course to begin a 10-question MCQ quiz.</p>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    ${courseKeys.map(key => `
-                        <button onclick="startQuiz('${key}')" class="course-button">
-                            ${QUIZ_DATA[key].title.split(' ')[0]}
-                            <span class="block text-xs font-normal text-gray-500">${key.toUpperCase()}</span>
-                        </button>
-                    `).join('')}
-                </div>
-            </div>
-        `;
-    }
-
-    window.startQuiz = (courseKey) => {
-        currentCourseKey = courseKey;
-        userAnswers = {};
-        renderQuiz();
-    };
-
-    function renderQuiz() {
-        if (!currentCourseKey) {
-            renderLandingPage();
-            return;
         }
 
-        const quiz = QUIZ_DATA[currentCourseKey];
-        const courseTitle = quiz.title;
+        function handleLogout() {
+            localStorage.removeItem('user_email');
+            location.reload();
+        }
 
-        const quizHTML = `
-            <div class="card p-6 md:p-10 w-full max-w-4xl mx-4">
-                <h2 class="text-2xl font-bold text-gray-800 mb-2">${courseTitle} Revision Test</h2>
-                <p class="text-sm text-gray-500 mb-6">Answer all 10 questions. Your progress will be saved automatically.</p>
+        function apiCall(data, cb) {
+            show('loading-overlay');
+            fetch(SCRIPT_URL, {
+                method: 'POST', body: JSON.stringify(data)
+            }).then(r => r.json()).then(d => {
+                hide('loading-overlay'); cb(d);
+            }).catch(e => {
+                hide('loading-overlay'); alert("Connection error.");
+            });
+        }
 
-                <form id="quizForm">
-                    ${quiz.questions.map((qData, qIndex) => `
-                        <div class="mb-8 p-4 border border-gray-200 rounded-lg bg-gray-50">
-                            <p class="font-semibold text-lg text-gray-700 mb-3">
-                                ${qIndex + 1}. ${qData.q}
-                            </p>
-                            ${qData.a.map((option, oIndex) => `
-                                <label class="radio-label block">
-                                    <input type="radio" 
-                                           name="q${qIndex}" 
-                                           value="${oIndex}" 
-                                           class="mr-3 text-green-500 focus:ring-green-500"
-                                           onchange="handleAnswerChange(${qIndex}, ${oIndex})"
-                                           ${userAnswers[qIndex] === oIndex ? 'checked' : ''}>
-                                    <span class="text-gray-700">${option}</span>
-                                </label>
-                            `).join('')}
-                        </div>
-                    `).join('')}
-
-                    <div class="mt-8 flex justify-center">
-                        <button type="button" onclick="submitQuiz()" class="submit-button shadow-lg hover:shadow-xl">
-                            Submit Test & View Results
-                        </button>
-                    </div>
-                    <div class="mt-4 text-center">
-                        <button type="button" onclick="renderLandingPage()" class="text-sm text-gray-500 hover:text-gray-700">
-                            ← Back to Course Selection
-                        </button>
-                    </div>
-                </form>
-            </div>
-        `;
-        appDiv.innerHTML = quizHTML;
-    }
-
-    window.handleAnswerChange = (qIndex, oIndex) => {
-        userAnswers[qIndex] = oIndex;
-        // console.log('Answers:', userAnswers); // Optional: for debugging
-    }
-
-    window.submitQuiz = () => {
-        const quiz = QUIZ_DATA[currentCourseKey];
-        let correctCount = 0;
-        let resultsHTML = '';
-        const totalQuestions = quiz.questions.length;
-
-        quiz.questions.forEach((qData, qIndex) => {
-            const userAnswer = userAnswers[qIndex];
-            const isCorrect = userAnswer === qData.c;
-            
-            const userSelectionText = userAnswer !== undefined 
-                ? qData.a[userAnswer] 
-                : '<span class="text-red-500 font-medium">Unanswered</span>';
-            
-            const correctAnswerText = qData.a[qData.c];
-
-            const resultClass = isCorrect ? 'border-green-400 bg-green-50' : 'border-red-400 bg-red-50';
-            const statusIcon = isCorrect ? '✔️' : '❌';
-
-            if (isCorrect) {
-                correctCount++;
-            }
-
-            resultsHTML += `
-                <div class="mb-6 p-4 border-l-4 ${resultClass} rounded-md shadow-sm">
-                    <p class="font-bold text-gray-800 mb-1">${qIndex + 1}. ${qData.q}</p>
-                    <div class="text-sm space-y-1">
-                        <p class="text-gray-600">Your Answer: ${userSelectionText}</p>
-                        ${!isCorrect ? 
-                            `<p class="text-green-600 font-semibold">Correct Answer: ${correctAnswerText}</p>` :
-                            `<p class="text-green-600 font-semibold flex items-center">${statusIcon} Correct!</p>`
-                        }
-                    </div>
-                </div>
-            `;
-        });
-
-        const scorePercentage = ((correctCount / totalQuestions) * 100).toFixed(0);
-
-        const resultsPage = `
-            <div class="card p-6 md:p-10 w-full max-w-4xl mx-4">
-                <h2 class="text-3xl font-extrabold text-center text-gray-800 mb-2">${quiz.title} Results</h2>
-                
-                <div class="my-6 p-6 text-center border-2 border-dashed border-gray-300 rounded-lg">
-                    <p class="text-xl font-medium text-gray-700">Your Score</p>
-                    <p class="text-5xl font-extrabold mt-1" style="color: var(--primary-color);">
-                        ${correctCount} / ${totalQuestions}
-                    </p>
-                    <p class="text-lg text-gray-500 mt-1">(${scorePercentage}%)</p>
-                </div>
-
-                <h3 class="text-xl font-bold text-gray-700 mb-4 border-b pb-2">Detailed Review (${totalQuestions - correctCount} Mistakes)</h3>
-                
-                ${resultsHTML}
-
-                <div class="mt-8 flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-                    <button onclick="retakeQuiz()" class="submit-button shadow-lg hover:shadow-xl">
-                        Retake Test
-                    </button>
-                    <button onclick="renderLandingPage()" class="submit-button !bg-gray-500 hover:!bg-gray-600">
-                        Select Another Course
-                    </button>
-                </div>
-            </div>
-        `;
-
-        appDiv.innerHTML = resultsPage;
-    };
-
-    window.retakeQuiz = () => {
-        // Reset answers and re-render the quiz for the current course
-        userAnswers = {};
-        renderQuiz();
-    };
-
-    // Make functions globally accessible for inline onclick handlers
-    window.renderLandingPage = renderLandingPage;
-    window.startQuiz = startQuiz;
-    window.submitQuiz = submitQuiz;
-    window.retakeQuiz = retakeQuiz;
-
-</script>
+        function showForgotModal() { show('forgot-modal'); }
+        function closeModal(id) { hide(id); }
+        document.addEventListener('contextmenu', e => e.preventDefault());
+    </script>
 </body>
 </html>
